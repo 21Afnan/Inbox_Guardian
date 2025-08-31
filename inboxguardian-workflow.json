@@ -166,16 +166,25 @@
     },
     {
       "parameters": {
-        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+        "resource": "thread",
+        "operation": "trash",
+        "threadId": "{{$json[\"id\"]}}"
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [
-        -16,
+        -32,
         -48
       ],
-      "id": "3d301420-8dd0-4b72-8829-ab89b1d3663b",
-      "name": "Code2"
+      "id": "57dc7253-4cd5-4ad9-be10-0eea3fb70130",
+      "name": "Trash a thread",
+      "webhookId": "17af50e4-f77b-43b6-aa5a-228f92903343",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "kS3z88DGL0JjOJQQ",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -257,16 +266,11 @@
         ],
         [
           {
-            "node": "Code2",
+            "node": "Trash a thread",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "Code2": {
-      "main": [
-        []
       ]
     }
   },
@@ -274,7 +278,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "bf30ae4b-62a7-447a-8fd6-457daca626cd",
+  "versionId": "5d2ac639-ce08-4011-932e-763be85b7be5",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "199ac88cd464bd29e376321a6b7a3a561815ac8ab969ffc6f362f950ae96b4f2"
