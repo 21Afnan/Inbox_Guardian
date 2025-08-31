@@ -1,0 +1,284 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "customEmailConfig": "[\"UNSEEN\"]"
+        }
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -1264,
+        -240
+      ],
+      "id": "9dbf15b9-d71d-46bf-b945-1cc01fdba3eb",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "YD1jM0BL9J9AILix",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# _input.item.json contains the email data from IMAP Trigger\nemail_data = _input.item.json\n\n# Add clean fields\n# add this alongside the other fields you set\n_input.item.json[\"rfc822MessageId\"] = email_data.get(\"messageId\", \"\")  # IMAP message-id header, looks like <abc@domain>\n\n_input.item.json[\"emailId\"] = email_data.get(\"attributes\", {}).get(\"uid\", \"\")\n_input.item.json[\"emailSubject\"] = email_data.get(\"subject\", \"\")\n_input.item.json[\"senderEmail\"] = email_data.get(\"from\", \"\")\n_input.item.json[\"emailBodyText\"] = email_data.get(\"textPlain\", \"\")\n_input.item.json[\"emailBodyHtml\"] = email_data.get(\"textHtml\", \"\")\n_input.item.json[\"emailDate\"] = email_data.get(\"date\", \"\")\n\n# Return the modified item\nreturn _input.item\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -240
+      ],
+      "id": "28cb355e-f0cf-4ee5-9ddf-1b8fc3be5c80",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an assistant classifying emails.\nClassify this email into one of two categories: IMPORTANT or UNIMPORTANT.\n\nRules:\n\nIMPORTANT = job offers, interviews, bills, banking, client/project related.\n\nUNIMPORTANT = promotions, newsletters, LinkedIn notifications, spam, ads.\n\nInstructions:\n\nReply only with raw JSON (no code fences, no explanations).\n\nDo not hardcode the classification; determine it based on the email content.\n\nHere is the email data:\nEmail ID: {{$json.emailId}}\nFrom: {{$json.senderEmail}}\nSubject: {{$json.emailSubject}}\nBody: {{$json.emailBodyText}}\n\nOutput format exactly like this, but with the correct classification:\n\n{\n\"emailId\": \"{{$json.emailId}}\",\n\"senderEmail\": \"{{$json.senderEmail}}\",\n\"emailSubject\": \"{{$json.emailSubject}}\",\n\"emailBodyText\": \"{{$json.emailBodyText}}\",\n\"emailDate\": \"{{$json.emailDate}}\",\n\"classification\": \"IMPORTANT or UNIMPORTANT based on email content\"\n}",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=You are an assistant classifying emails.\nClassify this email into one of two categories: IMPORTANT or UNIMPORTANT.\n\nRules:\n\nIMPORTANT = job offers, interviews, bills, banking, client/project related.\n\nUNIMPORTANT = promotions, newsletters, LinkedIn notifications, spam, ads.\n\nInstructions:\n\nReply only with raw JSON (no code fences, no explanations).\n\nDo not hardcode the classification; determine it based on the email content.\n\nHere is the email data:\nEmail ID: {{$json.emailId}}\nFrom: {{$json.senderEmail}}\nSubject: {{$json.emailSubject}}\nBody: {{$json.emailBodyText}}\n\nOutput format exactly like this, but with the correct classification:\n\n{\n\"emailId\": \"{{$json.emailId}}\",\n\"senderEmail\": \"{{$json.senderEmail}}\",\n\"emailSubject\": \"{{$json.emailSubject}}\",\n\"emailBodyText\": \"{{$json.emailBodyText}}\",\n\"emailDate\": \"{{$json.emailDate}}\",\n\"classification\": \"IMPORTANT or UNIMPORTANT based on email content\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -816,
+        -144
+      ],
+      "id": "d8663916-5e1f-4405-b9eb-a8596de9656c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        80
+      ],
+      "id": "b9998aab-b55e-4311-9e73-19069d908c4a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "LYXKzv2pct7zuphK",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1040,
+        -48
+      ],
+      "id": "45577dd2-5bd8-4374-9e10-e27a5d27014a",
+      "name": "When chat message received",
+      "webhookId": "e7e7efea-2622-4621-923e-faa7d422c08c"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Code1 (replace all)\nimport json\nincoming = _input.item.json\n\nraw_output = incoming.get(\"text\", \"\") or incoming.get(\"classification\", \"\")\nif isinstance(raw_output, str):\n    raw_output = raw_output.replace(\"```json\", \"\").replace(\"```\", \"\").strip()\n    try:\n        parsed = json.loads(raw_output)\n    except:\n        parsed = {\"classification\": raw_output}\nelse:\n    parsed = raw_output if isinstance(raw_output, dict) else {}\n\n# normalize\ncls = (parsed.get(\"classification\", \"\") or \"\").strip().upper()\n\n# merge back onto original so attributes.uid survives\nincoming[\"classification\"] = cls\n# also keep any fields Gemini returned (safe overwrite of the “flat” ones)\nfor k in (\"emailId\",\"senderEmail\",\"emailSubject\",\"emailBodyText\",\"emailDate\"):\n    if k in parsed:\n        incoming[k] = parsed[k]\n\nreturn incoming\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "b91965e0-5a16-49fe-b844-99277c78abce",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f433016c-b7a4-4ca2-828f-0757a582eb1c",
+              "leftValue": "={{ $json.classification }}",
+              "rightValue": "\"IMPORTANT\"",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -144
+      ],
+      "id": "b345d465-ecf9-41c9-ae42-0bccb79fa43d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discordapp.com/api/webhooks/1411354432813273128/UWcYNNV3FXatwYlFcA7b-Md3Re1XvwN-Gl_vW1HPsPlKUk4tPp7KtU3D3_WKsvL4kbQN",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "=📧 **New Email Alert** From: {{$json.senderEmail}} Subject: {{$json.emailSubject}} Classification: {{$json.classification}} Date: {{$json.emailDate}}  📝 {{$json.emailBodyText}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        -240
+      ],
+      "id": "f820e223-8054-42d8-abd4-e223c89a75d0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -48
+      ],
+      "id": "3d301420-8dd0-4b72-8829-ab89b1d3663b",
+      "name": "Code2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bf30ae4b-62a7-447a-8fd6-457daca626cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "199ac88cd464bd29e376321a6b7a3a561815ac8ab969ffc6f362f950ae96b4f2"
+  },
+  "id": "SPhYyh8E3PDHF4hb",
+  "tags": []
+}
