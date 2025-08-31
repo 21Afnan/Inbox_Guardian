@@ -14,13 +14,13 @@ Runs fully on your machine → your data stays private.
 ---
 # 📂 Repo contents
 
-InboxGuardian/
+```InboxGuardian/
 ├─ workflow.json         # exported n8n workflow
 ├─ screenshots/
 │  └─ flow.png           # screenshot of workflow canvas
 ├─ README.md             # project description & instructions
 └─ .gitignore            # ignores sensitive files
-
+```
 ## 🛠️ Run Locally with Docker
 
 ### 1. Install Docker Desktop
