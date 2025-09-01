@@ -1,19 +1,17 @@
 {
-  "name": "My workflow",
+  "name": "InboxGuardian",
   "nodes": [
     {
       "parameters": {
-        "options": {
-          "customEmailConfig": "[\"UNSEEN\"]"
-        }
+        "options": {}
       },
       "type": "n8n-nodes-base.emailReadImap",
       "typeVersion": 2.1,
       "position": [
-        -1264,
+        -816,
         -240
       ],
-      "id": "9dbf15b9-d71d-46bf-b945-1cc01fdba3eb",
+      "id": "5108135d-67e1-417b-9e5d-2250271de021",
       "name": "Email Trigger (IMAP)",
       "credentials": {
         "imap": {
@@ -24,87 +22,55 @@
     },
     {
       "parameters": {
-        "language": "python",
-        "pythonCode": "# _input.item.json contains the email data from IMAP Trigger\nemail_data = _input.item.json\n\n# Add clean fields\n# add this alongside the other fields you set\n_input.item.json[\"rfc822MessageId\"] = email_data.get(\"messageId\", \"\")  # IMAP message-id header, looks like <abc@domain>\n\n_input.item.json[\"emailId\"] = email_data.get(\"attributes\", {}).get(\"uid\", \"\")\n_input.item.json[\"emailSubject\"] = email_data.get(\"subject\", \"\")\n_input.item.json[\"senderEmail\"] = email_data.get(\"from\", \"\")\n_input.item.json[\"emailBodyText\"] = email_data.get(\"textPlain\", \"\")\n_input.item.json[\"emailBodyHtml\"] = email_data.get(\"textHtml\", \"\")\n_input.item.json[\"emailDate\"] = email_data.get(\"date\", \"\")\n\n# Return the modified item\nreturn _input.item\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -1040,
-        -240
-      ],
-      "id": "28cb355e-f0cf-4ee5-9ddf-1b8fc3be5c80",
-      "name": "Code"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=You are an assistant classifying emails.\nClassify this email into one of two categories: IMPORTANT or UNIMPORTANT.\n\nRules:\n\nIMPORTANT = job offers, interviews, bills, banking, client/project related.\n\nUNIMPORTANT = promotions, newsletters, LinkedIn notifications, spam, ads.\n\nInstructions:\n\nReply only with raw JSON (no code fences, no explanations).\n\nDo not hardcode the classification; determine it based on the email content.\n\nHere is the email data:\nEmail ID: {{$json.emailId}}\nFrom: {{$json.senderEmail}}\nSubject: {{$json.emailSubject}}\nBody: {{$json.emailBodyText}}\n\nOutput format exactly like this, but with the correct classification:\n\n{\n\"emailId\": \"{{$json.emailId}}\",\n\"senderEmail\": \"{{$json.senderEmail}}\",\n\"emailSubject\": \"{{$json.emailSubject}}\",\n\"emailBodyText\": \"{{$json.emailBodyText}}\",\n\"emailDate\": \"{{$json.emailDate}}\",\n\"classification\": \"IMPORTANT or UNIMPORTANT based on email content\"\n}",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
         "messages": {
-          "messageValues": [
+          "values": [
             {
-              "type": "HumanMessagePromptTemplate",
-              "message": "=You are an assistant classifying emails.\nClassify this email into one of two categories: IMPORTANT or UNIMPORTANT.\n\nRules:\n\nIMPORTANT = job offers, interviews, bills, banking, client/project related.\n\nUNIMPORTANT = promotions, newsletters, LinkedIn notifications, spam, ads.\n\nInstructions:\n\nReply only with raw JSON (no code fences, no explanations).\n\nDo not hardcode the classification; determine it based on the email content.\n\nHere is the email data:\nEmail ID: {{$json.emailId}}\nFrom: {{$json.senderEmail}}\nSubject: {{$json.emailSubject}}\nBody: {{$json.emailBodyText}}\n\nOutput format exactly like this, but with the correct classification:\n\n{\n\"emailId\": \"{{$json.emailId}}\",\n\"senderEmail\": \"{{$json.senderEmail}}\",\n\"emailSubject\": \"{{$json.emailSubject}}\",\n\"emailBodyText\": \"{{$json.emailBodyText}}\",\n\"emailDate\": \"{{$json.emailDate}}\",\n\"classification\": \"IMPORTANT or UNIMPORTANT based on email content\"\n}"
+              "content": "=You are an email analyzer. You will receive email data in JSON.\n\nPlain Text:\n{{$json.text || ''}}\n\nMetadata:\n{{ JSON.stringify({\n  // Try RFC 822 Message-ID from multiple sources\n  id_header: $json.messageId || ($json.headers && ($json.headers['Message-Id'] || $json.headers['message-id'])) || (\n    $json.payload && $json.payload.headers && (\n      ($json.payload.headers.find(h => h.name === 'Message-Id') || {}).value\n    )\n  ) || null,\n\n  // IMAP UID if coming from IMAP trigger\n  imap_uid: $json.attributes?.uid ?? $json.uid ?? null,\n\n  // If coming from a Gmail node, these exist:\n  gmail_message_id: $json.id ?? null,\n  gmail_thread: $json.threadId ?? null,\n\n  // Common headers (try both flat + Gmail payload.headers)\n  from: $json.from || ($json.payload && $json.payload.headers && (($json.payload.headers.find(h => h.name === 'From') || {}).value)) || null,\n  subject: $json.subject || ($json.payload && $json.payload.headers && (($json.payload.headers.find(h => h.name === 'Subject') || {}).value)) || null,\n  to: $json.to || ($json.payload && $json.payload.headers && (($json.payload.headers.find(h => h.name === 'To') || {}).value)) || null,\n  date: $json.date || ($json.payload && $json.payload.headers && (($json.payload.headers.find(h => h.name === 'Date') || {}).value)) || null,\n\n  // Pass headers through (flat map or Gmail payload.headers array)\n  headers: $json.headers || $json.payload?.headers || {}\n}) }}\n\nYour task: Return ONLY valid JSON (one object). No prose.\n\nFields to return exactly:\n- \"id_header\": RFC 822 Message-ID string from metadata, or \"\" if not present\n- \"imap_uid\": IMAP UID number from metadata, or null if not present\n- \"gmail_message_id\": Gmail message id string if present, else \"\"\n- \"gmail_thread\": Gmail thread id string if present, else \"\"\n- \"from\": sender string\n- \"subject\": subject string\n- \"date\": the same date string from metadata (do NOT reformat)\n- \"summary\": 1–3 sentence plain-text summary (\"\" if body empty)\n- \"classification\": PROMOTIONAL or KEEP\n- \"action\": TRASH if PROMOTIONAL, else NOTIFY\n- \"signals\": array of short cues (e.g., [\"empty_body\", \"list-unsubscribe\"])\n- \"id_source\": \"gmail_message_id\" if gmail_message_id != \"\", else (\"id_header\" if id_header != \"\" else \"none\")\n- \"can_delete\": true iff gmail_message_id != \"\", else false\n\nClassification rules:\n- PROMOTIONAL → ads, newsletters, sales/discounts, marketing, bulk mail, presence of \"List-Unsubscribe\", or clearly non-work notifications.\n- KEEP → work/school/admin messages, OTPs/security/account alerts, banks/receipts/invoices/order/shipments, calendar invites, professional comms.\n- If the body is empty or meaningless (e.g., “hi”, “ok”, “test”, “hu hi”, emojis only, <8 words and no useful info), treat as PROMOTIONAL.\n- If uncertain, prefer KEEP unless the “noise” rule applies.\n\nAction:\n- Set \"action\":\"TRASH\" when classification is PROMOTIONAL; otherwise \"NOTIFY\".\n\nReturn a single JSON object only.\n"
             }
           ]
         },
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        -816,
-        -144
-      ],
-      "id": "d8663916-5e1f-4405-b9eb-a8596de9656c",
-      "name": "Basic LLM Chain"
-    },
-    {
-      "parameters": {
+        "simplify": false,
+        "jsonOutput": true,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        -752,
-        80
+        -592,
+        -240
       ],
-      "id": "b9998aab-b55e-4311-9e73-19069d908c4a",
-      "name": "Google Gemini Chat Model",
+      "id": "c43edbdd-9341-4981-9ca0-48bb840336ee",
+      "name": "Message a model",
       "credentials": {
         "googlePalmApi": {
-          "id": "LYXKzv2pct7zuphK",
-          "name": "Google Gemini(PaLM) Api account"
+          "id": "jtfqlyFxgKzF9AXW",
+          "name": "Google Gemini(PaLM) Api account 2"
         }
       }
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://discordapp.com/api/webhooks/1411354432813273128/UWcYNNV3FXatwYlFcA7b-Md3Re1XvwN-Gl_vW1HPsPlKUk4tPp7KtU3D3_WKsvL4kbQN",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"📧 **New Email Alert**\\nFrom: {{$json.from}}\\nSubject: {{$json.subject}}\\nClassification: {{$json.classification}}\\nDate: {{$json.date}}\\n\\n📝 {{$json.summary}}\"\n}\n",
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        -1040,
-        -48
+        208,
+        -336
       ],
-      "id": "45577dd2-5bd8-4374-9e10-e27a5d27014a",
-      "name": "When chat message received",
-      "webhookId": "e7e7efea-2622-4621-923e-faa7d422c08c"
-    },
-    {
-      "parameters": {
-        "language": "python",
-        "pythonCode": "# Code1 (replace all)\nimport json\nincoming = _input.item.json\n\nraw_output = incoming.get(\"text\", \"\") or incoming.get(\"classification\", \"\")\nif isinstance(raw_output, str):\n    raw_output = raw_output.replace(\"```json\", \"\").replace(\"```\", \"\").strip()\n    try:\n        parsed = json.loads(raw_output)\n    except:\n        parsed = {\"classification\": raw_output}\nelse:\n    parsed = raw_output if isinstance(raw_output, dict) else {}\n\n# normalize\ncls = (parsed.get(\"classification\", \"\") or \"\").strip().upper()\n\n# merge back onto original so attributes.uid survives\nincoming[\"classification\"] = cls\n# also keep any fields Gemini returned (safe overwrite of the “flat” ones)\nfor k in (\"emailId\",\"senderEmail\",\"emailSubject\",\"emailBodyText\",\"emailDate\"):\n    if k in parsed:\n        incoming[k] = parsed[k]\n\nreturn incoming\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -464,
-        -144
-      ],
-      "id": "b91965e0-5a16-49fe-b844-99277c78abce",
-      "name": "Code1"
+      "id": "250a85b9-d6a7-4ab0-8dcf-3f1f3e00a158",
+      "name": "HTTP Request"
     },
     {
       "parameters": {
@@ -117,9 +83,9 @@
           },
           "conditions": [
             {
-              "id": "f433016c-b7a4-4ca2-828f-0757a582eb1c",
-              "leftValue": "={{ $json.classification }}",
-              "rightValue": "\"IMPORTANT\"",
+              "id": "b7d85262-dadc-4812-9984-656f1181d5c3",
+              "leftValue": "={{$json.action}}",
+              "rightValue": "NOTIFY",
               "operator": {
                 "type": "string",
                 "operation": "equals",
@@ -134,57 +100,65 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -240,
-        -144
+        -16,
+        -240
       ],
-      "id": "b345d465-ecf9-41c9-ae42-0bccb79fa43d",
+      "id": "2ae00df5-0823-495e-a245-13d43afd0d13",
       "name": "If"
     },
     {
       "parameters": {
-        "method": "POST",
+        "language": "python",
+        "pythonCode": "# n8n Python node: Run Once for ALL Items\n# Accepts either IMAP Trigger items or Analyzer items.\n# Guarantees a usable `id` with priority: gmail_thread > imap_uid > gmail_message_id > id_header\n\nimport hashlib\noutput_items = []\n\ndef pick(v, *fallbacks):\n    if v not in (None, \"\"):\n        return v\n    for f in fallbacks:\n        if f not in (None, \"\"):\n            return f\n    return None\n\ndef synth_id(payload: dict) -> str:\n    # stable hash from available fields\n    src = {\n        \"id_header\": payload.get(\"id_header\", \"\"),\n        \"from\": payload.get(\"from\", \"\"),\n        \"subject\": payload.get(\"subject\", \"\"),\n        \"date\": payload.get(\"date\", \"\"),\n        \"body_64\": (payload.get(\"text\") or payload.get(\"summary\") or \"\")[:512],\n    }\n    digest = hashlib.sha1(str(src).encode(\"utf-8\")).hexdigest()\n    return digest  # 40-char hex\n\nfor item in items:\n    j = item.get(\"json\", {}) or {}\n\n    # --- read from BOTH schemas: analyzer FIRST, then IMAP trigger fallback ---\n    id_header = pick(j.get(\"id_header\"), j.get(\"messageId\"))\n    imap_uid  = pick(j.get(\"imap_uid\"), (j.get(\"attributes\", {}) or {}).get(\"uid\"), j.get(\"uid\"))\n    gmail_msg = pick(j.get(\"gmail_message_id\"), j.get(\"id\"))         # Gmail message id (if present)\n    thread_id = pick(j.get(\"gmail_thread\"), j.get(\"threadId\"))        # Gmail thread id (if present)\n\n    sender   = pick(j.get(\"from\"))\n    subject  = pick(j.get(\"subject\"))\n    date_str = pick(j.get(\"date\"))\n    headers  = j.get(\"headers\", {}) or {}\n\n    # body text: IMAP trigger uses \"text\"; analyzer may only have \"summary\"\n    body_text = (j.get(\"text\") or \"\").strip()\n    summary   = j.get(\"summary\")\n    if not summary:\n        if body_text:\n            w = body_text.split()\n            summary = \" \".join(w[:40]) + (\"...\" if len(w) > 40 else \"\")\n        else:\n            summary = \"\"\n\n    # --- build signals ---\n    signals = list(j.get(\"signals\", [])) if isinstance(j.get(\"signals\"), list) else []\n    if not body_text and \"empty_body\" not in signals and summary == \"\":\n        signals.append(\"empty_body\")\n    if any(\"list-unsubscribe\" in k.lower() for k in headers.keys()) and \"list-unsubscribe\" not in signals:\n        signals.append(\"list-unsubscribe\")\n    if not id_header and \"missing_id_header\" not in signals:\n        signals.append(\"missing_id_header\")\n\n    # --- classification/action: respect analyzer if present, else light rules ---\n    classification = (j.get(\"classification\") or \"\").upper()\n    if classification not in (\"PROMOTIONAL\", \"KEEP\"):\n        is_noise = (not body_text) or (len(body_text.split()) < 8)\n        has_unsub = any(\"list-unsubscribe\" in k.lower() for k in headers.keys())\n        promotional = is_noise or has_unsub\n        classification = \"PROMOTIONAL\" if promotional else \"KEEP\"\n\n    action = j.get(\"action\")\n    if action not in (\"TRASH\", \"NOTIFY\"):\n        action = \"TRASH\" if classification == \"PROMOTIONAL\" else \"NOTIFY\"\n\n    # --- choose a generic id (always set) ---\n    if thread_id:\n        gen_id = thread_id\n        id_source = \"gmail_thread\"\n    elif imap_uid:\n        gen_id = imap_uid\n        id_source = \"imap_uid\"\n    elif gmail_msg:\n        gen_id = gmail_msg\n        id_source = \"gmail_message_id\"\n    elif id_header:\n        gen_id = id_header\n        id_source = \"id_header\"\n    else:\n        gen_id = synth_id({\n            \"id_header\": id_header,\n            \"from\": sender,\n            \"subject\": subject,\n            \"date\": date_str,\n            \"text\": body_text,\n            \"summary\": summary,\n        })\n        id_source = \"synthetic_hash\"\n\n    normalized = {\n        \"id\": gen_id,                    # ← use this in downstream nodes\n        \"id_source\": id_source,          # debug: where id came from\n        \"imap_uid\": imap_uid,\n        \"gmail_message_id\": gmail_msg,\n        \"gmail_thread\": thread_id,\n        \"id_header\": id_header,\n        \"from\": sender,\n        \"subject\": subject,\n        \"date\": date_str,\n        \"summary\": summary,\n        \"classification\": classification,\n        \"action\": action,\n        \"signals\": signals,\n        \"_debug_seen_keys\": list(j.keys()),  # helps see incoming shape\n    }\n\n    output_items.append({\"json\": normalized})\n\nreturn output_items\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -240
+      ],
+      "id": "5d6e6cd0-1282-4e3d-b7dd-903bdb235600",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{$json[\"id\"]}}\n"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        -144
+      ],
+      "id": "a7eac3b5-731f-40f0-b6ed-4ff341dc92f3",
+      "name": "Delete a message",
+      "webhookId": "0b40df07-1beb-4586-b3c0-339fa9a0c3c0",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gLFmc9qLyZJqFuxt",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "url": "https://discordapp.com/api/webhooks/1411354432813273128/UWcYNNV3FXatwYlFcA7b-Md3Re1XvwN-Gl_vW1HPsPlKUk4tPp7KtU3D3_WKsvL4kbQN",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "content",
-              "value": "=📧 **New Email Alert** From: {{$json.senderEmail}} Subject: {{$json.emailSubject}} Classification: {{$json.classification}} Date: {{$json.emailDate}}  📝 {{$json.emailBodyText}}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"content\": \"📧 **New Email Alert**\\nFrom: {{$json.from}}\\nSubject: {{$json.subject}}\\nClassification: {{$json.classification}}\\nDate: {{$json.date}}\\n\\n📝 {{$json.summary}}\"\n}\n",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -16,
-        -240
+        432,
+        -144
       ],
-      "id": "f820e223-8054-42d8-abd4-e223c89a75d0",
-      "name": "HTTP Request"
-    },
-    {
-      "parameters": {
-        "resource": "thread",
-        "operation": "trash",
-        "threadId": "{{$json[\"id\"]}}"
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
-      "position": [
-        -32,
-        -48
-      ],
-      "id": "57dc7253-4cd5-4ad9-be10-0eea3fb70130",
-      "name": "Trash a thread",
-      "webhookId": "17af50e4-f77b-43b6-aa5a-228f92903343",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "kS3z88DGL0JjOJQQ",
-          "name": "Gmail account"
-        }
-      }
+      "id": "f7177f52-48b0-4615-9a30-9d22c974c040",
+      "name": "HTTP Request2"
     }
   ],
   "pinData": {},
@@ -193,62 +167,18 @@
       "main": [
         [
           {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
             "node": "Code",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code": {
-      "main": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "When chat message received": {
-      "main": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Basic LLM Chain": {
-      "main": [
-        [
-          {
-            "node": "Code1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code1": {
-      "main": [
-        [
-          {
-            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -266,7 +196,29 @@
         ],
         [
           {
-            "node": "Trash a thread",
+            "node": "Delete a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a message": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
             "type": "main",
             "index": 0
           }
@@ -278,11 +230,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "5d2ac639-ce08-4011-932e-763be85b7be5",
+  "versionId": "ad5577a7-2361-4450-b406-feb53a540b40",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "199ac88cd464bd29e376321a6b7a3a561815ac8ab969ffc6f362f950ae96b4f2"
   },
-  "id": "SPhYyh8E3PDHF4hb",
+  "id": "W2VJsQwGxuKlGAIR",
   "tags": []
 }
