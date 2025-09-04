@@ -1,38 +1,79 @@
-# 📬 InboxGuardian
+📬 InboxGuardian
 
-**InboxGuardian** is a local AI-powered agent built with [n8n](https://n8n.io/) that automatically classifies emails into **Important** and **Unimportant**, and routes the junk toward Trash to keep your inbox clean.  
+InboxGuardian is a local AI-powered email cleaner built with n8n
+.
+It automatically scans your inbox on a schedule, classifies emails with AI, and then:
+
+✅ Sends important emails as notifications via Discord
+
+🗑️ Automatically deletes unimportant emails from Gmail
+
 Runs fully on your machine → your data stays private.
 
----
+🚀 How it Works
 
-## 🚀 How it works
-1. **IMAP Email Trigger** → fetches emails from your inbox  
-2. **AI (Gemini)** → classifies emails as *IMPORTANT* or *UNIMPORTANT*  
-3. **IF Node** → branches logic  
-4. **Trash Node (demo)** → routes unimportant emails to deletion  
+Scheduler Trigger → runs the workflow at intervals you define
 
----
-# 📂 Repo contents
+Gmail Get Message Node → fetches latest emails
 
-```InboxGuardian/
-├─ workflow.json         # exported n8n workflow
-├─ screenshots/
-│  └─ flow.png           # screenshot of workflow canvas
-├─ README.md             # project description & instructions
-└─ .gitignore            # ignores sensitive files
-```
-## 🛠️ Run Locally with Docker
+AI Classifier (Gemini 2.5 Flash Lite) → analyzes & labels emails as KEEP or DELETE
 
-### 1. Install Docker Desktop
-- Download & install [Docker Desktop](https://www.docker.com/products/docker-desktop/) for your OS.  
-- Start Docker Desktop.
+Code Node → parses structured AI output into JSON
 
-### 2. Verify Docker installation
-Open a terminal (PowerShell / Command Prompt) and check version:
-```bash
+IF Node → routes based on classification
+
+KEEP → sends you a notification in Discord via webhook
+
+DELETE → removes the message using Gmail Delete Message Node
+
+📂 Repo Contents
+├─ workflow.json         # exported n8n workflow  
+├─ screenshots/          # workflow visuals  
+│  └─ flow.png           # screenshot of workflow  
+├─ media/                # workflow demo assets  
+│  ├─ workflow.png       # static workflow image  
+│  └─ demo.mp4           # short video demo (download & open locally)  
+├─ README.md             # project description & instructions  
+└─ .gitignore            # ignores sensitive files  
+
+🛠️ Run Locally with Docker
+
+Install Docker Desktop
+
+Download & install Docker Desktop
+
+Start Docker Desktop
+
+Verify Docker Installation
+
 docker --version
-Docker version 26.0.0, build <hash>
+
+
+Run n8n with InboxGuardian
+
 docker run -it -p 5678:5678 ^
   -v D:\N8N\inboxguardian:/home/node/.n8n ^
   n8nio/n8n
-http://localhost:5678
+
+
+Open n8n
+👉 http://localhost:5678
+
+🖼️ Workflow Preview
+Workflow Image
+
+Workflow Video
+
+📹 Download & open demo.mp4
+
+🔔 Features
+
+🕒 Runs on schedule – no IMAP connection needed
+
+🤖 Smart AI classification using Gemini 2.5 Flash Lite
+
+📨 Important emails → instant Discord alerts
+
+🗑️ Junk emails → auto-deleted from Gmail
+
+🔒 Local setup → you control your data
