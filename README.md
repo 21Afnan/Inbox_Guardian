@@ -35,7 +35,7 @@ Runs fully on your machine → **your data stays private**.
 
 
 ---
-
+```
 ## 🛠️ Run Locally with Docker  
 
 ### 1. Install Docker Desktop  
@@ -61,7 +61,7 @@ docker run -it -p 5678:5678 ^
 Once the container is running, open:
 👉 http://localhost:5678
 
-
+```
 
 
 ## 🔑 Setup Credentials
@@ -97,9 +97,8 @@ Once the container is running, open:
 ## 🖼️ Workflow Preview
 📸 Screenshot: See screenshots/inboxguardian-flow.png
 
-🎥 Video Demo: Watch demo.mp4
+🎥 Video Demo: Watch inboxguardian.mp4
 
-▶ Watch Demo Video
 
 ## 🔔 Features 
 - 🕒 Runs on schedule – no IMAP connection needed
