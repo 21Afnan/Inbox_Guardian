@@ -28,7 +28,7 @@ Runs fully on your machine → **your data stays private**.
 ├─ inboxguardian-workflow.json # exported n8n workflow
 ├─ screenshots/ # workflow visuals
 │ └─ inboxguardian-flow.png # screenshot of workflow
-├─ demo.mp4 # short demo video (download & open locally)
+  └─ demo.mp4 # short demo video (download & open locally)
 ├─ README.md # project description & instructions
 └─ .gitignore # ignores sensitive files
 ```
