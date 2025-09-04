@@ -60,10 +60,10 @@ docker run -it -p 5678:5678 ^
 ### 5. Open n8n
 Once the container is running, open:
 👉 http://localhost:5678
-```sh
 
 
 
+```
 ## 🔑 Setup Credentials
 
 ### Gmail
@@ -92,12 +92,12 @@ Once the container is running, open:
 - Update credentials with yours
 
 - Save & activate
-
+```
 
 ## 🖼️ Workflow Preview
--📸 Screenshot
+📸 Screenshot: See screenshots/inboxguardian-flow.png
 
-## 🎥 Video Demo
+🎥 Video Demo: Watch demo.mp4
 
 ▶ Watch Demo Video
 
