@@ -63,7 +63,7 @@ Once the container is running, open:
 ```sh
 
 
-```
+
 ## 🔑 Setup Credentials
 
 ### Gmail
