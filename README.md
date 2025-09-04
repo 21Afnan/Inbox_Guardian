@@ -66,3 +66,8 @@ Workflow Video
 - 🗑️ Junk emails → auto-deleted from Gmail  
 - 🔒 Local setup → you control your data  
 
+
+
+📩 **Connect with me:**  
+- Email: [afnanshoukat35@gmail.com](mailto:afnanshoukat35@gmail.com)  
+- LinkedIn: [www.linkedin.com/in/afnan-shoukat-030306267](https://www.linkedin.com/in/afnan-shoukat-030306267)  
