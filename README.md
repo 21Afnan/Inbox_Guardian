@@ -54,7 +54,7 @@ Runs fully on your machine → **your data stays private**.
 👉 http://localhost:5678
 
 ```
-🖼️ Workflow Preview
+## 🖼️ Workflow Preview
 Workflow Image
 
 Workflow Video
