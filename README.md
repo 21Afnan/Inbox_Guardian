@@ -63,7 +63,7 @@ Once the container is running, open:
 
 
 
-```
+
 ## 🔑 Setup Credentials
 
 ### Gmail
@@ -92,7 +92,7 @@ Once the container is running, open:
 - Update credentials with yours
 
 - Save & activate
-```
+
 
 ## 🖼️ Workflow Preview
 📸 Screenshot: See screenshots/inboxguardian-flow.png
