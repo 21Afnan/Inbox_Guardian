@@ -47,19 +47,19 @@ Runs fully on your machine → **your data stays private**.
    ```sh
    docker --version
 
-3.docker run -it -p 5678:5678 ^
+3. **Run this**
+docker run -it -p 5678:5678 ^
   -v D:\N8N\inboxguardian:/home/node/.n8n ^
   n8nio/n8n
-4.Open n8n
+4. **How To open**:
+Open n8n
 👉 http://localhost:5678
 
 ```
 ## 🖼️ Workflow Preview
 Workflow Image
-
 Workflow Video
 
-📹 Download & open demo.mp4
 ## 🔔 Features  
 
 - 🕒 Runs on schedule – no IMAP connection needed  
