@@ -24,12 +24,10 @@ Runs fully on your machine → **your data stays private**.
 
 ## 📂 Repo Contents  
 ```
-├─ workflow.json # exported n8n workflow
+├─ inboxguardian-workflow.json # exported n8n workflow
 ├─ screenshots/ # workflow visuals
-│ └─ flow.png # screenshot of workflow
-├─ media/ # workflow demo assets
-│ ├─ workflow.png # static workflow image
-│ └─ demo.mp4 # short video demo (download & open locally)
+│ └─ inbox_guardian-flow.png # screenshot of workflow
+├ └─ demo.mp4 # short video demo (download & open locally)
 ├─ README.md # project description & instructions
 └─ .gitignore # ignores sensitive files
 ``` 
