@@ -1,124 +1,93 @@
-# 📬 InboxGuardian  
+<div align="center">
 
-InboxGuardian is a **local AI-powered email cleaner** built with [n8n](https://n8n.io/).  
-It automatically scans your inbox on a schedule, classifies emails with AI, and then:  
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:4A0D2E,50:C2185B,100:FF8FC7&height=200&section=header&text=Inbox%20Guardian&fontSize=52&fontColor=FFFFFF&fontAlignY=36&desc=A%20self-hosted%20AI%20agent%20that%20keeps%20your%20Gmail%20clean&descSize=16&descAlignY=58" width="100%" alt="Inbox Guardian"/>
 
-- ✅ Sends **important emails** as notifications via Discord  
-- 🗑️ Automatically deletes **unimportant emails** from Gmail  
+<p>
+  <img src="https://img.shields.io/badge/n8n-EA4B71?style=for-the-badge&logo=n8n&logoColor=white" alt="n8n"/>
+  <img src="https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini"/>
+  <img src="https://img.shields.io/badge/Gmail%20API-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail API"/>
+  <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"/>
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/License-MIT-FF4FA3?style=for-the-badge" alt="MIT License"/>
+</p>
 
-Runs fully on your machine → **your data stays private**.  
-
----
-
-## 🚀 How It Works  
-
-1. **Scheduler Trigger** → runs the workflow at intervals you define  
-2. **Gmail Get Message Node** → fetches unread emails  
-3. **AI Classifier (Gemini 2.5 Flash Lite)** → analyzes & labels emails as `KEEP` or `DELETE`  
-4. **Code Node** → parses AI output into JSON  
-5. **IF Node** → routes based on classification:  
-   - **KEEP** → sends you a notification in **Discord** via webhook  
-   - **DELETE** → removes the message using **Gmail Delete Message Node**  
+</div>
 
 ---
 
-## 📂 Repository Structure  
+## The problem
+
+Important emails get buried under newsletters, promotions and automated notices, and sorting them by hand every day is tiring. Most "smart inbox" tools solve this by reading your mail on their own servers.
+
+**Inbox Guardian** is an AI agent you run yourself. On a schedule it reads new Gmail messages, asks an AI model whether each one matters, sends the important ones to you on Discord, and clears out the rest. The workflow runs in your own n8n instance, so you stay in control of your mail.
+
+<p align="center"><img src="screenshot%26Video/Inbox_Guardian-workflow.png" width="760" alt="Inbox Guardian n8n workflow"/></p>
+
+## How it works
 
 ```
-├─ inboxguardian-workflow.json # exported n8n workflow
-├─ screenshots/ # workflow visuals
-│ └─ inboxguardian-flow.png # screenshot of workflow
-  └─ demo.mp4 # short demo video (download & open locally)
-├─ README.md # project description & instructions
-└─ .gitignore # ignores sensitive files
+Schedule Trigger ──> Gmail: get new messages ──> Gemini: KEEP or DELETE? ──> Code: parse to JSON ──> If
+                                                                                                │
+                                              KEEP ──> HTTP Request to a Discord webhook (alert)│
+                                              DELETE ──> Gmail: delete message  ◄───────────────┘
 ```
 
+| Step | n8n node | What it does |
+|---|---|---|
+| 1 | Schedule Trigger | Runs the check at the interval you choose |
+| 2 | Gmail, get many messages | Fetches the latest messages |
+| 3 | Google Gemini, message a model | Reads each email and labels it `KEEP` or `DELETE` |
+| 4 | Code | Turns the model's answer into clean JSON the workflow can route on |
+| 5 | If | Sends each email down the right branch |
+| 6a | HTTP Request | Posts important emails to your Discord channel |
+| 6b | Gmail, delete a message | Removes unimportant emails from the inbox |
+
+A short demo video is in [`screenshot&Video/inbox_guardian.mp4`](screenshot%26Video/inbox_guardian.mp4) (download to watch).
+
+## Run it
+
+**1. Start n8n with Docker** (Windows example; change the folder to any path you like):
+
+```bash
+docker run -it -p 5678:5678 -v D:\N8N\inboxguardian:/home/node/.n8n n8nio/n8n
+```
+
+Open `http://localhost:5678`.
+
+**2. Import the workflow:** in n8n choose *Import from File* and select `inboxguardian-workflow.json`.
+
+**3. Add your credentials:**
+
+| Service | What to set |
+|---|---|
+| Gmail | OAuth2 credentials with read and delete access |
+| Gemini | Your API key from Google AI Studio |
+| Discord | A webhook URL from *Server Settings, Integrations, Webhooks*, pasted into the HTTP Request node |
+
+**4. Save and activate.** The guardian now runs on its schedule.
+
+> Tip: test on a secondary Gmail account first, and check the prompt in the Gemini node matches what *you* consider important before letting it delete anything.
+
+## Repository contents
+
+```
+Inbox_Guardian/
+├── inboxguardian-workflow.json      # exported n8n workflow
+└── screenshot&Video/
+    ├── Inbox_Guardian-workflow.png  # workflow canvas
+    └── inbox_guardian.mp4           # demo video
+```
 
 ---
-```
-## 🛠️ Run Locally with Docker  
 
-### 1. Install Docker Desktop  
-- Download & install [Docker Desktop](https://www.docker.com/products/docker-desktop/)  
-- Start Docker Desktop  
+<div align="center">
 
-### 2. Verify Installation  
-Run this command in terminal/PowerShell:  
+**Afnan Shoukat**
 
-docker --version
+<a href="mailto:afnanshoukat35@gmail.com"><img src="https://img.shields.io/badge/Email-afnanshoukat35%40gmail.com-FF4FA3?style=for-the-badge&logo=gmail&logoColor=white&labelColor=4A0D2E" alt="Email"/></a>
+<a href="https://www.linkedin.com/in/afnanshoukat"><img src="https://img.shields.io/badge/LinkedIn-Afnan%20Shoukat-FF4FA3?style=for-the-badge&logo=linkedin&logoColor=white&labelColor=4A0D2E" alt="LinkedIn"/></a>
+<a href="https://github.com/21Afnan"><img src="https://img.shields.io/badge/GitHub-21Afnan-FF4FA3?style=for-the-badge&logo=github&logoColor=white&labelColor=4A0D2E" alt="GitHub"/></a>
 
-### 3.Create a folder on your machine to persist workflow data (Windows example):
-mkdir D:\N8N\inboxguardian
+Released under the [MIT License](LICENSE).
 
-### 4. Run InboxGuardian
-Start n8n with the following command:
-docker run -it -p 5678:5678 ^
-  -v D:\N8N\inboxguardian:/home/node/.n8n ^
-  n8nio/n8n
-   ### 💡 Replace D:\N8N\inboxguardian with your local folder path if different.
-
-### 5. Open n8n
-Once the container is running, open:
-👉 http://localhost:5678
-
-```
-
-
-## 🔑 Setup Credentials
-
-### Gmail
-
-- In n8n, create new Gmail credentials (OAuth2 or service account)
-
-- Allow read + delete access
-
-- Discord Webhook
-
-- Go to your Discord server → Integrations → Webhooks
-
-- Copy webhook URL and paste into the Discord node in n8n
-
-- AI Classifier
-
-- Replace with your own Gemini API Key (from Google AI Studio
-) in the workflow
-
-### Import Workflow
-
-- In n8n, click Import from File
-
-- Upload inboxguardian-workflow.json
-
-- Update credentials with yours
-
-- Save & activate
-
-
-## 🖼️ Workflow Preview
-📸 Screenshot: See screenshots/inboxguardian-flow.png
-
-🎥 Video Demo: Watch inboxguardian.mp4
-
-
-## 🔔 Features 
-- 🕒 Runs on schedule – no IMAP connection needed
-- 📨 Connect Gmail node (Get Message)
-- 🤖 Smart AI classification using Gemini 2.5 Flash Lite
-- 📨 Important emails → instant Discord alerts
-- 🗑️ Junk emails → auto-deleted from Gmail 
-- 🔒 Local setup → you control your data
-
-
-
-```
-### ✅ Quick Start:
-Clone the repo, run Docker, import the workflow, add your credentials → InboxGuardian is ready 🚀
-
-git clone https://github.com/YOUR-USERNAME/inboxguardian.git
-cd inboxguardian
-docker run -it -p 5678:5678 -v %cd%:/home/node/.n8n n8nio/n8n
-```
-
- 📩 **Connect with me:** 
-- Email: [afnanshoukat35@gmail.com](mailto:afnanshoukat35@gmail.com)
-- LinkedIn: [www.linkedin.com/in/afnan-shoukat-030306267](https://www.linkedin.com/in/afnan-shoukat-030306267)
+</div>
